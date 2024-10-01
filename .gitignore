@@ -1,1 +1,3 @@
 /src/logs/
+*.py[cod]
+__pycache__/

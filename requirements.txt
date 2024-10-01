@@ -93,7 +93,7 @@ pycparser==2.21
 pydub==0.25.1
 Pygments==2.17.2
 pyparsing==3.1.1
-pypesq @ https://github.com/vBaiCai/python-pesq/archive/master.zip#sha256=fba27c3d95e8f72fed7c55f675ce6057a64b26a1a67a2e469df2804cca69b8cc
+#pypesq @ https://github.com/vBaiCai/python-pesq/archive/master.zip#sha256=fba27c3d95e8f72fed7c55f675ce6057a64b26a1a67a2e469df2804cca69b8cc
 python-dateutil==2.8.2
 python-json-logger==2.0.7
 PyYAML==6.0.1

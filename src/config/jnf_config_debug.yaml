@@ -3,10 +3,10 @@ seed: 123
 
 data:
   n_channels: 3
-  batch_size: 4
+  batch_size: 2
   prep_files: {
-                data: "../../../datasets/wsj0_hdf5_sim/prep_mix_ch3_sp5_fixed_pos.hdf5",
-                meta: "../../../datasets/wsj0_hdf5_sim/prep_mix_meta_ch3_sp5_fixed_pos.json",
+                data: "../../../datasets/wsj0_hdf5_sim/prep_mix_ch3_sp5_small.hdf5",
+                meta: "../../../datasets/wsj0_hdf5_sim/prep_mix_meta_ch3_sp5_small.json",
 #                data: ./data/prep/prep_mix_ch3_sp5_small.hdf5,
 #                meta: ./data/prep/prep_mix_meta_ch3_sp5_small.json,
               }
@@ -15,7 +15,7 @@ data:
   meta_frame_length: 48000
   stft_length_samples: 512
   stft_shift_samples: 256
-  n_workers: 10 #10
+  n_workers: 0 #10
 
 network:
   n_channels: 3
@@ -38,12 +38,12 @@ experiment:
   reference_channel: 0
 
 training:
-  max_epochs: 250 # 250
+  max_epochs: 50 # 250
   gradient_clip_val: 0
   gradient_clip_algorithm: value
-  strategy: ddp
-  accelerator: gpu
-  devices: 4
+  strategy: auto #ddp
+  accelerator: gpu #mps #gpu
+  devices: 1
 
 
 logging:

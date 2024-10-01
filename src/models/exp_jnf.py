@@ -3,6 +3,9 @@ import torch
 from torch import nn
 from src.models.exp_enhancement import EnhancementExp
 
+import sys
+sys.path.append('/users/giovanni/deep-cyclic-filter')
+sys.path.append('/users/giovanni/deep-cylic-filter/src')
 
 class JNFExp(EnhancementExp):
 
@@ -92,7 +95,7 @@ class JNFExp(EnhancementExp):
             #     stage, n_samples=10)
             # self.log_batch_detailed_maks([complex_speech_mask.abs(), complex_noise_mask.abs()], batch_idx, stage, n_samples=10)
         if stage == 'val':
-            self.log(f'monitor_loss', loss, on_step=on_step, on_epoch=True, logger=True)
+            self.log(f'monitor_loss', loss, on_step=on_step, on_epoch=True, logger=True, sync_dist=True)
             global_si_sdr = self.compute_global_si_sdr(est_clean_td, clean_td)
             self.log('val/si_sdr', global_si_sdr.mean(), on_epoch=True, logger=True, sync_dist=True)
 
