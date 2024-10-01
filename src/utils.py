@@ -7,7 +7,10 @@ import numpy as np
 import scipy
 import sys
 import warnings
-#import sounddevice
+
+# Only import if we are not on UNIX server
+if sys.platform != 'linux':
+    import sounddevice
 import os
 
 from matplotlib import pyplot as plt, ticker
@@ -372,6 +375,10 @@ def set_printoptions_numpy():
 
 
 def play(sound, fs=16000, max_length_seconds=5, normalize_flag=True, volume=0.75):
+    if sys.platform == 'linux':
+        warnings.warn("Cannot play sound on Linux server. Skipping.")
+        return
+
     sound_normalized = volume * normalize_volume(sound) if normalize_flag else sound
     max_length_samples = int(max_length_seconds * fs)
     blocking = True
