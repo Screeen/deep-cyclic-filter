@@ -9,7 +9,10 @@ import numpy as np
 import h5py
 import os
 import random
+from pathlib import Path
+
 random.seed(12345)
+
 """
 Dataset generation for a speaker in a fixed location relative to the microphone array. This preprocessing script creates a HDF5 file with three datasets: 
 - train
@@ -25,10 +28,21 @@ Each dataset has the shape [NUM_SAMPLES, 3, CHANNELS, MAX_SAMPLES_PER_FILE]. In 
 The code in this file was partially written by Nils Mohrmann. 
 """
 
-# WSJ0 dataset path
-WSJ0_PATH = "/path/to/wsj0/CSR-1-WSJ-0/WAV/wsj0"
+WSJ0_PATH = "/Users/giovannibologni/Documents/TU-Delft/Code-parent/datasets/wsj0_audio"
+
+# Count all files with extension '.wv1' in WSJ0_PATH and subdirectories that are inside subdirectories of "sd_dt_20"
+# such as *si_dt_20/*/*.wv1
+validation_files = sum(f.is_file() for f in Path(WSJ0_PATH).rglob('si_dt_20/*/*.wav'))
+test_files = sum(f.is_file() for f in Path(WSJ0_PATH).rglob('si_et_05/*/*.wav'))
+train_files = sum(f.is_file() for f in Path(WSJ0_PATH).rglob('si_tr_s/*/*.wav'))
+
+print(
+    f"Train files: {train_files}, Validation files: {validation_files}, Test files: {test_files}")
+
 # Path where to save the simulated data
-SIM_DATA_PATH = "./prep/"
+SIM_DATA_PATH = "/Users/giovannibologni/Documents/TU-Delft/Code-parent/datasets/wsj0_hdf5_sim"
+if not os.path.exists(SIM_DATA_PATH):
+    os.makedirs(SIM_DATA_PATH)
 
 
 class RoomSimulation:
@@ -148,6 +162,8 @@ class SPRoomSimulator:
         self.rng = np.random.default_rng(seed2)
         meta = {}
 
+        speaker_list = [str(s) for s in speaker_list]
+
         signal = []
         for file in speaker_list:
             audio, fs = sf.read(file)
@@ -155,12 +171,12 @@ class SPRoomSimulator:
 
         # ensure noise signal is long enough and does not start with zeros always 
         offset_indices = np.random.randint(
-            low=-8000, high=8000, size=len(speaker_list)-1)
+            low=-8000, high=8000, size=len(speaker_list) - 1)
         target_signal_len = len(signal[0])
-        for i in range(len(speaker_list)-1):
+        for i in range(len(speaker_list) - 1):
             new_signal = np.roll(
-                np.resize(signal[1+i], target_signal_len), shift=offset_indices[i])
-            signal[1+i] = new_signal
+                np.resize(signal[1 + i], target_signal_len), shift=offset_indices[i])
+            signal[1 + i] = new_signal
 
         # room properties
         RT = self.rng.uniform(rt60_min, rt60_max) if reverb else 0
@@ -170,7 +186,6 @@ class SPRoomSimulator:
         meta["room_dim"] = [room_dim[0], room_dim[1], room_dim[2]]
         self.exp_room.set_room_properties(RT, np.array(room_dim))
         self.dry_room.set_room_properties(0, np.array(room_dim))
-
 
         # random mic position in room (min 1 m to wall)
         mic_pos = self.rng.random(3) * (room_dim - 2.02) + 1.01
@@ -185,13 +200,14 @@ class SPRoomSimulator:
         # target speaker
         target_phi = phi + target_angle / 360 * 2 * np.pi
         main_source = mic_pos + \
-                normal_vec(target_phi) * (self.rng.random() * 0.7 + 0.3)
-        main_source[2] = self.rng.normal(1.60, 0.08) # height of speaker
+                      normal_vec(target_phi) * (self.rng.random() * 0.7 + 0.3)
+        main_source[2] = self.rng.normal(1.60, 0.08)  # height of speaker
 
         self.exp_room.add_source(main_source, signal[0], 0)
         self.dry_room.add_source(main_source, signal[0], 0)
-        
-        meta["target_file"] = speaker_list[0].split(
+
+        speaker_list_str = str(speaker_list[0])
+        meta["target_file"] = speaker_list_str.split(
             "wsj0")[-1].replace("\\", "/")
         meta["n_samples"] = len(signal[0])
         meta["target_pos"] = main_source.tolist()
@@ -203,12 +219,12 @@ class SPRoomSimulator:
             for moveback in np.arange(0, 8, 0.25):
                 # if pos outside from room, move back to the microphone
                 # distance max 7 m, min 1 m
-                side_room_rad = 2*np.pi/360*side_room
-                speaker_range = (2*np.pi-2*side_room_rad)/n_interfering
+                side_room_rad = 2 * np.pi / 360 * side_room
+                speaker_range = (2 * np.pi - 2 * side_room_rad) / n_interfering
 
                 interf_source = mic_pos + normal_vec(
                     target_phi + side_room_rad + speaker_range * self.rng.random() + interf_idx * speaker_range) \
-                    * max(1, self.rng.random() * 7 - moveback)
+                                * max(1, self.rng.random() * 7 - moveback)
 
                 # height of speaker is round about the height of standing people
                 interf_source[2] = self.rng.normal(1.60, 0.08)
@@ -266,7 +282,7 @@ def snr_scale_factor(speech: np.ndarray, noise: np.ndarray, snr: int):
     speech_var = np.mean(np.var(speech, axis=-1))
 
     factor = np.sqrt(
-        speech_var / np.maximum((noise_var * 10. ** (snr / 10.)), 10**(-6)))
+        speech_var / np.maximum((noise_var * 10. ** (snr / 10.)), 10 ** (-6)))
 
     return factor
 
@@ -309,11 +325,16 @@ def prep_speaker_mix_data(store_dir: str,
     prep_store_name = f"prep_mix{'_' + post_fix if post_fix else ''}.hdf5"
 
     train_samples = list(
-        sorted(glob.glob(os.path.join(wsj0_path, 'si_tr_s/*/*.wav'))))
+        sorted(f for f in Path(WSJ0_PATH).rglob('si_tr_s/*/*.wav')))
     val_samples = list(
-        sorted(glob.glob(os.path.join(wsj0_path, 'si_dt_20/*/*.wav'))))
+        sorted(f for f in Path(WSJ0_PATH).rglob('si_dt_20/*/*.wav')))
     test_samples = list(
-        sorted(glob.glob(os.path.join(wsj0_path, 'si_et_05/*/*.wav'))))
+        sorted(f for f in Path(WSJ0_PATH).rglob('si_et_05/*/*.wav')))
+
+    # If path corresponding to target dataset exists already, raise an error
+    if os.path.exists(os.path.join(store_dir, prep_store_name)):
+        raise ValueError(
+            f"Dataset {os.path.join(store_dir, prep_store_name)} already exists.")
 
     meta = {}
     with h5py.File(os.path.join(store_dir, prep_store_name), 'w') as prep_storage:
@@ -345,7 +366,6 @@ def prep_speaker_mix_data(store_dir: str,
                 # select interfering speakers
                 interfering_speakers = random.choices(
                     samples[:n_dataset_samples], k=n_interfering_speakers)
-                
 
                 reverb_target_signal, noise_signal, dry_target_signal, sample_meta = sproom.create_sample(
                     speaker_list=[target_path] + interfering_speakers,
@@ -363,23 +383,23 @@ def prep_speaker_mix_data(store_dir: str,
 
                 # store reverb clean
                 audio_dataset[target_idx, 0, :,
-                              :n_audio_samples] = reverb_target_signal[:, :n_audio_samples]
+                :n_audio_samples] = reverb_target_signal[:, :n_audio_samples]
                 audio_dataset[target_idx, 0,
-                              :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
+                :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
 
                 # store noise
                 audio_dataset[target_idx, 1, :,
-                              :n_audio_samples] = noise_signal[:, :n_audio_samples]
+                :n_audio_samples] = noise_signal[:, :n_audio_samples]
                 audio_dataset[target_idx, 1,
-                              :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
+                :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
 
                 set_meta[target_idx] = sample_meta
 
                 # store dry clean
                 audio_dataset[target_idx, 2, :,
-                              :n_audio_samples] = dry_target_signal[:, :n_audio_samples]
+                :n_audio_samples] = dry_target_signal[:, :n_audio_samples]
                 audio_dataset[target_idx, 2,
-                              :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
+                :, n_audio_samples:MAX_SAMPLES_PER_FILE] = 0
 
                 if target_idx % 10 == 0:
                     print(
@@ -394,10 +414,12 @@ def prep_speaker_mix_data(store_dir: str,
 
 if __name__ == '__main__':
     prep_speaker_mix_data(SIM_DATA_PATH,
-                          'ch3_sp5_small',
+                          # 'ch3_sp5_small',
+                          'ch3_sp5_fixed_pos',
                           WSJ0_PATH,
                           n_interfering_speakers=5,
                           n_channels=3,
+                          # num_files={'train': 30, 'val': 20, 'test': 10},
                           num_files={'train': 6000, 'val': 1000, 'test': 600},
                           reverb=True,
                           target_angle=0,

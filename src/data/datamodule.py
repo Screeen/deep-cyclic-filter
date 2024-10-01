@@ -1,4 +1,4 @@
-from data.dataset import MixDataset
+from src.data.dataset import MixDataset
 from typing import List
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl

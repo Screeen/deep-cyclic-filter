@@ -1,15 +1,19 @@
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import ModelSummary
-from models.exp_jnf import JNFExp
-from models.models import FTJNF
-from data.datamodule import HDF5DataModule
+from src.models.exp_jnf import JNFExp
+from src.models.models import FTJNF
+from src.data.datamodule import HDF5DataModule
 from typing import Optional
 import yaml
 
-EXP_NAME='JNF'
+EXP_NAME = 'JNF'
 
-def setup_logging(tb_log_dir: str, version_id: Optional[int]= None):
+import src.utils as u
+u.set_printoptions_numpy()
+
+
+def setup_logging(tb_log_dir: str, version_id: Optional[int] = None):
     """
     Set-up a Tensorboard logger.
 
@@ -22,10 +26,11 @@ def setup_logging(tb_log_dir: str, version_id: Optional[int]= None):
 
         # get current version id
         version_id = int((tb_logger.log_dir).split('_')[-1])
-    else: 
+    else:
         tb_logger = pl_loggers.TensorBoardLogger(tb_log_dir, name=EXP_NAME, log_graph=False, version=version_id)
 
     return tb_logger, version_id
+
 
 def load_model(ckpt_file: str,
                _config):
@@ -34,26 +39,28 @@ def load_model(ckpt_file: str,
     model.to('cuda')
     return model
 
+
 def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_algorithm, strategy, accelerator):
     return pl.Trainer(enable_model_summary=True,
-                         logger=logger,
-                         devices=devices,
-                         log_every_n_steps=1,
-                         max_epochs=max_epochs,
-                         gradient_clip_val = gradient_clip_val,
-                         gradient_clip_algorithm = gradient_clip_algorithm,
-                         strategy = strategy,
-                         accelerator = accelerator,
-                         callbacks=[
-                             #setup_checkpointing(),
-                             ModelSummary(max_depth=2)
-                                    ],
+                      logger=logger,
+                      devices=devices,
+                      log_every_n_steps=1,
+                      max_epochs=max_epochs,
+                      gradient_clip_val=gradient_clip_val,
+                      gradient_clip_algorithm=gradient_clip_algorithm,
+                      strategy=strategy,
+                      accelerator=accelerator,
+                      callbacks=[
+                          # setup_checkpointing(),
+                          ModelSummary(max_depth=2)
+                      ],
 
-                         )
+                      )
 
-if __name__=="__main__":
 
-    with open('config/jnf_config.yaml') as config_file: 
+if __name__ == "__main__":
+
+    with open('../config/jnf_config.yaml') as config_file:
         config = yaml.safe_load(config_file)
 
     ## REPRODUCIBILITY
@@ -75,11 +82,10 @@ if __name__=="__main__":
     else:
         model = FTJNF(**config['network'])
         exp = JNFExp(model=model,
-                    stft_length=stft_length,
-                    stft_shift=stft_shift,
-                    **config['experiment'])
+                     stft_length=stft_length,
+                     stft_shift=stft_shift,
+                     **config['experiment'])
 
     ## TRAIN
     trainer = get_trainer(logger=tb_logger, **config['training'])
     trainer.fit(exp, dm)
-
