@@ -1,3 +1,5 @@
+import argparse
+
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import ModelSummary
@@ -6,6 +8,7 @@ from src.models.models import FTJNF
 from src.data.datamodule import HDF5DataModule
 from typing import Optional
 import yaml
+import os
 
 EXP_NAME = 'JNF'
 
@@ -60,7 +63,17 @@ def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_al
 
 if __name__ == "__main__":
 
-    with open('../config/jnf_config.yaml') as config_file:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--test', action='store_true', help="Run model in test mode.")
+    args = parser.parse_args()
+
+    is_test_mode = args.test
+
+    config_name = 'jnf_config.yaml'
+    file_dir = os.path.dirname(os.path.realpath('__file__'))
+    config_file_path = os.path.join(file_dir, '..', 'config', config_name)
+
+    with open(config_file_path) as config_file:
         config = yaml.safe_load(config_file)
 
     ## REPRODUCIBILITY
@@ -77,9 +90,12 @@ if __name__ == "__main__":
 
     ## CONFIGURE EXPERIMENT
     ckpt_file = config['training'].get('resume_ckpt', None)
-    if not ckpt_file is None:
+    if ckpt_file is not None:
         exp = load_model(ckpt_file, config)
     else:
+        if is_test_mode:
+            raise ValueError('Testing mode, but no checkpoint file given. Check the config file.')
+
         model = FTJNF(**config['network'])
         exp = JNFExp(model=model,
                      stft_length=stft_length,
@@ -88,4 +104,7 @@ if __name__ == "__main__":
 
     ## TRAIN
     trainer = get_trainer(logger=tb_logger, **config['training'])
-    trainer.fit(exp, dm)
+    if not is_test_mode:
+        trainer.fit(exp, dm)
+    else:
+        trainer.test(exp, datamodule=dm)

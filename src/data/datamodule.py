@@ -35,6 +35,8 @@ class HDF5DataModule(pl.LightningDataModule):
         """
         super().__init__()
 
+        print(f"Initializing DataModule with {n_channels} channels")
+
         self.batch_size = batch_size
         self.fs = fs
         self.meta_frame_len = meta_frame_length
