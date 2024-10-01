@@ -11,7 +11,9 @@ random.seed(12345)
 from typing import List
 import json
 """
-Dataset generation for a target speaker in a variable location. The target speaker angle is relative to the microphone array orientation. This preprocessing script creates a HDF5 file with three datasets: 
+Dataset generation for a target speaker in a variable location. 
+The target speaker angle is relative to the microphone array orientation. 
+This preprocessing script creates a HDF5 file with three datasets: 
 - train
 - val
 - test
