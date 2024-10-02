@@ -5,8 +5,8 @@ data:
   n_channels: 3
   batch_size: 1
   prep_files: {
-                data: "../../../datasets/wsj0_hdf5_sim/prep_mix_ch3_sp5_fixed_pos.hdf5",
-                meta: "../../../datasets/wsj0_hdf5_sim/prep_mix_meta_ch3_sp5_fixed_pos.json",
+                data: "../../../datasets/wsj0_hdf5_sim/prep_mix_ch3_sp5_fixed_pos_tiny.hdf5",
+                meta: "../../../datasets/wsj0_hdf5_sim/prep_mix_meta_ch3_sp5_fixed_pos_tiny.json",
 #                data: ./data/prep/prep_mix_ch3_sp5_small.hdf5,
 #                meta: ./data/prep/prep_mix_meta_ch3_sp5_small.json,
               }
@@ -38,13 +38,13 @@ experiment:
   reference_channel: 0
 
 training:
-  max_epochs: 50 # 250
+  max_epochs: 10 # 250
   gradient_clip_val: 0
   gradient_clip_algorithm: value
   strategy: auto #ddp
   accelerator: gpu #mps #gpu
   devices: 1
-  resume_ckpt: "../logs/tb_logs/JNF/version_1/checkpoints/epoch=49-step=750.ckpt"
+  resume_ckpt: "../logs/tb_logs/JNF/version_0/checkpoints/epoch=9-step=300.ckpt"
 
 
 logging:

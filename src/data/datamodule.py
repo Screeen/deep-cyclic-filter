@@ -16,7 +16,7 @@ class HDF5DataModule(pl.LightningDataModule):
                  meta_frame_length: int,
                  n_workers: int,
                  dry_target: bool = True,
-                 target_dir = 0,
+                 target_dir=0,
                  noise_snr: List[int] = None,
                  fs: int = 16000
                  ):
@@ -51,28 +51,40 @@ class HDF5DataModule(pl.LightningDataModule):
 
         self.n_workers = n_workers
 
-        self.train_dataset = MixDataset(stage='train', 
-                                        prep_files=prep_files, 
-                                        n_channels=self.n_channels, 
+        self.train_dataset = MixDataset(stage='train',
+                                        prep_files=prep_files,
+                                        n_channels=self.n_channels,
                                         meta_frame_length=self.meta_frame_len,
-                                        disable_random=False, 
-                                        snr_range = self.snr_range,
+                                        disable_random=False,
+                                        snr_range=self.snr_range,
                                         dry_target=dry_target,
-                                        target_dir= self.target_dir, 
+                                        target_dir=self.target_dir,
                                         noise_snr=self.noise_snr)
-        self.val_dataset = MixDataset(stage='val', 
-                                        prep_files=prep_files, 
-                                        n_channels=self.n_channels, 
-                                        meta_frame_length=self.meta_frame_len,
-                                        disable_random=True, 
-                                        snr_range = self.snr_range,
-                                        dry_target=dry_target,
-                                        target_dir= self.target_dir, 
-                                        noise_snr=self.noise_snr)
-        
+        self.val_dataset = MixDataset(stage='val',
+                                      prep_files=prep_files,
+                                      n_channels=self.n_channels,
+                                      meta_frame_length=self.meta_frame_len,
+                                      disable_random=True,
+                                      snr_range=self.snr_range,
+                                      dry_target=dry_target,
+                                      target_dir=self.target_dir,
+                                      noise_snr=self.noise_snr)
+
+        self.test_dataset = MixDataset(stage='test',
+                                       prep_files=prep_files,
+                                       n_channels=self.n_channels,
+                                       meta_frame_length=self.meta_frame_len,
+                                       disable_random=True,
+                                       snr_range=self.snr_range,
+                                       dry_target=dry_target,
+                                       target_dir=self.target_dir,
+                                       noise_snr=self.noise_snr)
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=self.n_workers, shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers=self.n_workers, shuffle=False)
+
+    def test_dataloader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=self.n_workers, shuffle=False)

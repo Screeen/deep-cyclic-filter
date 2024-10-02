@@ -1,4 +1,6 @@
 import argparse
+import sys
+import warnings
 
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
@@ -12,7 +14,7 @@ import os
 
 EXP_NAME = 'JNF'
 
-import src.utils as u
+import src.utils.utils as u
 u.set_printoptions_numpy()
 
 
@@ -35,16 +37,16 @@ def setup_logging(tb_log_dir: str, version_id: Optional[int] = None):
     return tb_logger, version_id
 
 
-def load_model(ckpt_file: str,
-               _config):
-    # init_params = JNFExp.get_init_params(_config)
-    model = JNFExp.load_from_checkpoint(ckpt_file, hparams_file="../logs/tb_logs/JNF/version_1/hparams.yaml")
-    # model = JNFExp.load_from_checkpoint(ckpt_file, **init_params)
-    model.to('cuda')
-    return model
+def load_model(ckpt_file_: str, _config: dict):
+    print(f'Loading model from checkpoint {ckpt_file_}')
+    model_ = JNFExp.load_from_checkpoint(ckpt_file_)
+    if sys.platform == 'linux':
+        model_.to('cuda')
+    return model_
 
 
-def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_algorithm, strategy, accelerator):
+def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_algorithm, strategy, accelerator,
+                **kwargs):
     return pl.Trainer(enable_model_summary=True,
                       logger=logger,
                       devices=devices,
@@ -80,9 +82,9 @@ if __name__ == "__main__":
     ## CONFIGURE EXPERIMENT
     ckpt_file = config['training'].get('resume_ckpt', None)
     if ckpt_file is not None:
-        # Check that the checkpoint file exists
         if not os.path.exists(ckpt_file):
-            raise ValueError(f'Checkpoint file {ckpt_file} does not exist.')
+            warnings.warn(f'Checkpoint file {ckpt_file} does not exist. Training from scratch.')
+            ckpt_file = None
     else:
         if is_test_mode:
             raise ValueError('Testing mode, but no checkpoint file given. Check the config file.')

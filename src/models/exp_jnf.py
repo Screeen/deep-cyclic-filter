@@ -3,9 +3,6 @@ import torch
 from torch import nn
 from src.models.exp_enhancement import EnhancementExp
 
-import sys
-sys.path.append('/users/giovanni/deep-cyclic-filter')
-sys.path.append('/users/giovanni/deep-cylic-filter/src')
 
 class JNFExp(EnhancementExp):
 
@@ -38,11 +35,11 @@ class JNFExp(EnhancementExp):
 
         # self.example_input_array = torch.from_numpy(np.ones((2, 6, 513, 75), dtype=np.float32))
 
-    def forward(self, input):
-        speech_mask = self.model(input)
+    def forward(self, input_):
+        speech_mask = self.model(input_)
         return speech_mask
 
-    def shared_step(self, batch, batch_idx, stage: Literal['train', 'val']):
+    def shared_step(self, batch, batch_idx, stage: Literal['train', 'val', 'test']):
 
         noisy_td, clean_td, noise_td = batch['noisy_td'], batch['clean_td'], batch['noise_td']
         noisy_stft, clean_stft, noise_stft = self.get_stft_rep(noisy_td, clean_td, noise_td)
@@ -67,13 +64,10 @@ class JNFExp(EnhancementExp):
                                                                          est_clean_stft, est_noise_stft)
 
         # compute loss
-        clean_td_loss, noise_td_loss, clean_mag_loss, noise_mag_loss = self.loss(clean_td, est_clean_td, noise_td,
-                                                                                 est_noise_td,
-                                                                                 clean_stft[:, self.reference_channel,
-                                                                                 ...], est_clean_stft,
-                                                                                 noise_stft[:, self.reference_channel,
-                                                                                 ...],
-                                                                                 est_noise_stft)
+        clean_td_loss, noise_td_loss, clean_mag_loss, noise_mag_loss = (
+            self.loss(clean_td, est_clean_td, noise_td, est_noise_td,
+                      clean_stft[:, self.reference_channel, ...], est_clean_stft,
+                      noise_stft[:, self.reference_channel, ...], est_noise_stft))
 
         loss = torch.mean(self.loss_alpha * (clean_td_loss + noise_td_loss) + (clean_mag_loss + noise_mag_loss))
 
@@ -88,15 +82,27 @@ class JNFExp(EnhancementExp):
 
         if batch_idx < 1:
             self.log_batch_detailed_audio(noisy_td[:, self.reference_channel, ...], est_clean_td, batch_idx, stage)
-            # self.log_batch_detailed_spectrograms(
-            #     [noisy_stft[:, self.reference_channel, ...], clean_stft[:, self.reference_channel, ...],
-            #      noise_stft[:, self.reference_channel, ...], est_clean_stft, est_noise_stft],
-            #     batch_idx,
-            #     stage, n_samples=10)
-            # self.log_batch_detailed_maks([complex_speech_mask.abs(), complex_noise_mask.abs()], batch_idx, stage, n_samples=10)
+
+            self.log_batch_detailed_spectrograms(
+                [
+                    noisy_stft[:, self.reference_channel, ...],
+                    clean_stft[:, self.reference_channel, ...],
+                    noise_stft[:, self.reference_channel, ...],
+                    est_clean_stft,
+                    est_noise_stft,
+                ],
+                batch_idx,
+                stage,
+                n_samples=10,
+            )
+
         if stage == 'val':
             self.log(f'monitor_loss', loss, on_step=on_step, on_epoch=True, logger=True, sync_dist=True)
             global_si_sdr = self.compute_global_si_sdr(est_clean_td, clean_td)
             self.log('val/si_sdr', global_si_sdr.mean(), on_epoch=True, logger=True, sync_dist=True)
+
+        if stage == 'test':
+            global_si_sdr = self.compute_global_si_sdr(est_clean_td, clean_td)
+            self.log('test/si_sdr', global_si_sdr.mean(), on_epoch=True, logger=True, sync_dist=True)
 
         return loss

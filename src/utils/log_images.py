@@ -7,6 +7,7 @@ import matplotlib.cm as cm
 import numpy as np
 from typing import Union
 
+
 def make_image_grid(image_batch: torch.Tensor, vmin: Union[float, None], vmax: Union[float, None], num_images: int =
 -1, n_img_per_row: int = 8):
     """

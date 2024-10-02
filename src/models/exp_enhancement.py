@@ -1,10 +1,9 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-import numpy as np
 from typing import List, Union, Literal
-# from src.utils.log_images import make_image_grid
 from torch.optim import Adam
+from src.utils.log_images import make_image_grid
 
 
 class EnhancementExp(pl.LightningModule):
@@ -35,6 +34,9 @@ class EnhancementExp(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         return self.shared_step(batch, batch_idx, stage='val')
+
+    def test_step(self, batch, batch_idx):
+        return self.shared_step(batch, batch_idx, stage='test')
 
     def shared_step(self, batch, batch_idx, stage: Literal['train', 'val']):
         pass
@@ -236,7 +238,5 @@ class EnhancementExp(pl.LightningModule):
         # params['stft_length'] = config['data']['stft_length_samples']
         # params['stft_shift'] = config['data']['stft_shift_samples']
         # params['model'] = 'JNFExp'
-
-
 
         return config
