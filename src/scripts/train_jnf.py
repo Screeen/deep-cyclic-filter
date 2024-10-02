@@ -93,7 +93,13 @@ if __name__ == "__main__":
     pl.seed_everything(config.get('seed', 0), workers=True)
 
     ## LOGGING
-    tb_logger, version = setup_logging(config['logging']['tb_log_dir'])
+    version_id = None
+    if ckpt_file is not None:
+        for i, s in enumerate(ckpt_file.split(os.sep)):
+            if s.startswith('version'):
+                version_id = int(s.split('_')[-1])
+                break
+    tb_logger, version = setup_logging(config['logging']['tb_log_dir'], version_id)
 
     ## DATA
     data_config = config['data']
