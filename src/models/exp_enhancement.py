@@ -17,6 +17,7 @@ class EnhancementExp(pl.LightningModule):
                  scheduler_params: dict = None
                  ):
         super(EnhancementExp, self).__init__()
+        self.save_hyperparameters()
 
         self.model = model
 
@@ -34,7 +35,6 @@ class EnhancementExp(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         return self.shared_step(batch, batch_idx, stage='val')
-
 
     def shared_step(self, batch, batch_idx, stage: Literal['train', 'val']):
         pass
@@ -229,3 +229,14 @@ class EnhancementExp(pl.LightningModule):
             log_enhanced_name = f"{tag}/{str(batch_idx) if not batch_idx is None else ''}_{i}_enhanced"
             tensorboard.add_audio(log_enhanced_name, enhanced_td[i], global_step=self.current_epoch,
                                   sample_rate=self.trainer.datamodule.fs)
+
+    @staticmethod
+    def get_init_params(config):
+        # params = config['experiment'].copy()
+        # params['stft_length'] = config['data']['stft_length_samples']
+        # params['stft_shift'] = config['data']['stft_shift_samples']
+        # params['model'] = 'JNFExp'
+
+
+
+        return config

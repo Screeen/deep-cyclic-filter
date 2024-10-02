@@ -37,8 +37,9 @@ def setup_logging(tb_log_dir: str, version_id: Optional[int] = None):
 
 def load_model(ckpt_file: str,
                _config):
-    init_params = JNFExp.get_init_params(_config)
-    model = JNFExp.load_from_checkpoint(ckpt_file, **init_params)
+    # init_params = JNFExp.get_init_params(_config)
+    model = JNFExp.load_from_checkpoint(ckpt_file, hparams_file="../logs/tb_logs/JNF/version_1/hparams.yaml")
+    # model = JNFExp.load_from_checkpoint(ckpt_file, **init_params)
     model.to('cuda')
     return model
 
@@ -76,6 +77,16 @@ if __name__ == "__main__":
     with open(config_file_path) as config_file:
         config = yaml.safe_load(config_file)
 
+    ## CONFIGURE EXPERIMENT
+    ckpt_file = config['training'].get('resume_ckpt', None)
+    if ckpt_file is not None:
+        # Check that the checkpoint file exists
+        if not os.path.exists(ckpt_file):
+            raise ValueError(f'Checkpoint file {ckpt_file} does not exist.')
+    else:
+        if is_test_mode:
+            raise ValueError('Testing mode, but no checkpoint file given. Check the config file.')
+
     ## REPRODUCIBILITY
     pl.seed_everything(config.get('seed', 0), workers=True)
 
@@ -89,20 +100,16 @@ if __name__ == "__main__":
     dm = HDF5DataModule(**data_config)
 
     ## CONFIGURE EXPERIMENT
-    ckpt_file = config['training'].get('resume_ckpt', None)
     if ckpt_file is not None:
         exp = load_model(ckpt_file, config)
     else:
-        if is_test_mode:
-            raise ValueError('Testing mode, but no checkpoint file given. Check the config file.')
-
         model = FTJNF(**config['network'])
         exp = JNFExp(model=model,
                      stft_length=stft_length,
                      stft_shift=stft_shift,
                      **config['experiment'])
 
-    ## TRAIN
+    ## TRAIN or TEST
     trainer = get_trainer(logger=tb_logger, **config['training'])
     if not is_test_mode:
         trainer.fit(exp, dm)

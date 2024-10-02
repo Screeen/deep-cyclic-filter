@@ -44,6 +44,7 @@ training:
   strategy: ddp
   accelerator: gpu
   devices: 4
+  resume_ckpt: "../logs/tb_logs/JNF/version_1/checkpoints/epoch=49-step=750.ckpt"
 
 
 logging:
