@@ -18,23 +18,25 @@ import src.utils.utils as u
 u.set_printoptions_numpy()
 
 
-def setup_logging(tb_log_dir: str, version_id: Optional[int] = None):
+def setup_logging(tb_log_dir: str, version_id_: Optional[int] = None):
     """
     Set-up a Tensorboard logger.
 
     :param tb_log_dir: path to the log dir
-    :param version_id: the version id (integer). Consecutive numbering is used if no number is given. 
+    :param version_id_: the version id (integer). Consecutive numbering is used if no number is given.
     """
 
-    if version_id is None:
-        tb_logger = pl_loggers.TensorBoardLogger(tb_log_dir, name=EXP_NAME, log_graph=False)
+    if version_id_ is None:
+        tb_logger_ = pl_loggers.TensorBoardLogger(tb_log_dir, name=EXP_NAME, log_graph=False)
 
         # get current version id
-        version_id = int((tb_logger.log_dir).split('_')[-1])
+        version_id_ = int(tb_logger_.log_dir.split('_')[-1])
     else:
-        tb_logger = pl_loggers.TensorBoardLogger(tb_log_dir, name=EXP_NAME, log_graph=False, version=version_id)
+        tb_logger_ = pl_loggers.TensorBoardLogger(tb_log_dir, name=EXP_NAME, log_graph=False, version=version_id_)
 
-    return tb_logger, version_id
+    print(f'Logging to {tb_logger_.log_dir}')
+
+    return tb_logger_, version_id_
 
 
 def load_model(ckpt_file_: str, _config: dict):

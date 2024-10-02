@@ -149,7 +149,6 @@ class SPRoomSimulator:
         Create for a list of speech signals (first one is the target signal) the spatial image using a randomly placed
         microphone array and distributing the interfering speakers (len(speaker_list)-1) uniformly around the array.
 
-        :param n_interfering: number of interfering speaker
         :param seed2: Seed for the random audio files and positions
         :target_angle: place source at given fixed angle (given in degree)
         :reverb: turn off reverberation if set to False
@@ -213,7 +212,7 @@ class SPRoomSimulator:
         meta["target_pos"] = main_source.tolist()
         meta["target_angle"] = target_angle
 
-        # interering speakers
+        # interfering speakers
         n_interfering = len(speaker_list) - 1
         for interf_idx, interf_path in enumerate(speaker_list[1:]):
             for moveback in np.arange(0, 8, 0.25):
