@@ -69,11 +69,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true', help="Run model in test mode.")
+    parser.add_argument('--debug', action='store_true', help="Run model in debug mode (tiny dataset).")
     args = parser.parse_args()
 
     is_test_mode = args.test
+    is_debug_mode = args.debug or sys.platform == 'darwin'  # darwin is macOS
 
-    config_name = 'jnf_config.yaml'
+    if is_debug_mode and sys.platform == 'darwin':
+        config_name = 'jnf_config_debug_macos.yaml'
+    elif is_debug_mode and sys.platform == 'linux':
+        config_name = 'jnf_config_debug_server.yaml'
+    else:
+        config_name = 'jnf_config.yaml'
+
     file_dir = os.path.dirname(os.path.realpath('__file__'))
     config_file_path = os.path.join(file_dir, '..', 'config', config_name)
 
