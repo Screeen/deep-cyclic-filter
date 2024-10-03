@@ -8,8 +8,8 @@ import numpy as np
 from typing import Union
 
 
-def make_image_grid(image_batch: torch.Tensor, vmin: Union[float, None], vmax: Union[float, None], num_images: int =
--1, n_img_per_row: int = 8):
+def make_image_grid(image_batch: torch.Tensor, vmin: Union[float, None], vmax: Union[float, None],
+                    num_images: int = -1, n_img_per_row: int = 8):
     """
     Take a batch of 2D data and create a grid of visualizations.
 
@@ -30,6 +30,10 @@ def make_image_grid(image_batch: torch.Tensor, vmin: Union[float, None], vmax: U
         :param rgba: the rgba data in a numpy array
         :return: a numpy array with the same shape as the input array but with the number of channels reduced to 3
         """
+
+        if np.allclose(rgba[..., 3], 1):
+            return rgba[..., :3]
+
         a = rgba[..., 3]
         rgba[..., 0] = a * rgba[..., 0] + (1 - a) * 255
         rgba[..., 1] = a * rgba[..., 1] + (1 - a) * 255
@@ -47,12 +51,19 @@ def make_image_grid(image_batch: torch.Tensor, vmin: Union[float, None], vmax: U
         fig.colorbar(im, orientation="vertical", pad=0.2)
         plt.show()
 
+    def plot2(single_fig):
+        fig, ax = plt.subplots()
+        im = ax.imshow(single_fig)
+        fig.colorbar(im, ax=ax)
+        plt.show()
+
     cmap = cm.ScalarMappable(matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True), 'viridis')
 
     rgba_data = cmap.to_rgba(image_batch, norm=True)
     rgb_data = np.moveaxis(np.squeeze(rgba_to_rgb(rgba_data)), 3, 1)
     image_data = torch.from_numpy(rgb_data)
-    norm_image_data = ((image_data + 1) * 127.5).type(torch.ByteTensor)
-    grid = make_grid(norm_image_data, nrow=n_img_per_row, padding=2, normalize=False)
+    # norm_image_data = ((image_data + 1) * 127.5).type(torch.ByteTensor)
+    # grid = make_grid(norm_image_data, nrow=n_img_per_row, padding=2, normalize=False)
+    grid = make_grid(image_data, nrow=n_img_per_row, padding=2, normalize=True)
 
     return grid
