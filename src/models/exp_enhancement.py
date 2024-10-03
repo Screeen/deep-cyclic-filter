@@ -4,6 +4,7 @@ from torch import nn
 from typing import List, Union, Literal
 from torch.optim import Adam
 from torchmetrics.audio import ShortTimeObjectiveIntelligibility
+from torchmetrics.audio import PerceptualEvaluationSpeechQuality
 
 from src.utils.log_images import make_image_grid
 
@@ -85,13 +86,17 @@ class EnhancementExp(pl.LightningModule):
         return enhanced_si_sdr
 
     def compute_global_stoi(self, est_clean_time, clean_time):
-
-        # TODO: where to get fs?
-
+        # TODO: where to get fs? Same problem for PESQ
         stoi_obj = ShortTimeObjectiveIntelligibility(fs=16000, extended=True)
         stoi_res = stoi_obj(est_clean_time, clean_time)
 
         return stoi_res
+
+    def compute_global_pesq(self, est_clean_time, clean_time):
+        pesq_obj = PerceptualEvaluationSpeechQuality(16000, 'wb')
+        pesq_res = pesq_obj(est_clean_time, clean_time)
+
+        return pesq_res
 
     def configure_optimizers(self):
 

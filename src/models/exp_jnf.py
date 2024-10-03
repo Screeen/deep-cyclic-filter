@@ -108,4 +108,7 @@ class JNFExp(EnhancementExp):
             global_stoi = self.compute_global_stoi(est_clean_td, clean_td)
             self.log('test/stoi', global_stoi.mean(), on_epoch=True, logger=True, sync_dist=True)
 
+            global_pesq = self.compute_global_pesq(est_clean_td, clean_td)
+            self.log('test/pesq', global_pesq.mean(), on_epoch=True, logger=True, sync_dist=True)
+
         return loss
