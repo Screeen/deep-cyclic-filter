@@ -47,6 +47,13 @@ training:
   resume_ckpt: "../logs/tb_logs/JNF/version_6/checkpoints/epoch=249-step=93750.ckpt"
 
 
+testing:
+  strategy: auto #ddp
+  accelerator: gpu #mps #gpu
+  devices: 1
+  resume_ckpt: "../logs/tb_logs/JNF/version_0/checkpoints/epoch=9-step=300.ckpt"
+
+
 logging:
   tb_log_dir: "../logs/tb_logs"
   ckpt_dir: "../logs/ckpts"

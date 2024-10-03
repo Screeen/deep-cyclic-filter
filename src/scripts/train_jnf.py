@@ -47,8 +47,8 @@ def load_model(ckpt_file_: str, _config: dict):
     return model_
 
 
-def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_algorithm, strategy, accelerator,
-                **kwargs):
+def get_trainer(devices, logger, max_epochs=None, gradient_clip_val=None, gradient_clip_algorithm=None, strategy='auto',
+                accelerator='auto', resume_ckpt=None):
     return pl.Trainer(enable_model_summary=True,
                       logger=logger,
                       devices=devices,
@@ -62,7 +62,6 @@ def get_trainer(devices, logger, max_epochs, gradient_clip_val, gradient_clip_al
                           # setup_checkpointing(),
                           ModelSummary(max_depth=2)
                       ],
-
                       )
 
 
@@ -82,11 +81,10 @@ if __name__ == "__main__":
         config = yaml.safe_load(config_file)
 
     ## CONFIGURE EXPERIMENT
-    ckpt_file = config['training'].get('resume_ckpt', None)
+    ckpt_file = config['testing' if is_test_mode else 'training'].get('resume_ckpt', None)
     if ckpt_file is not None:
         if not os.path.exists(ckpt_file):
-            warnings.warn(f'Checkpoint file {ckpt_file} does not exist. Training from scratch.')
-            ckpt_file = None
+            raise ValueError(f'Checkpoint file {ckpt_file} does not exist. Cannot resume training or start testing.')
     else:
         if is_test_mode:
             raise ValueError('Testing mode, but no checkpoint file given. Check the config file.')
@@ -120,7 +118,7 @@ if __name__ == "__main__":
                      **config['experiment'])
 
     ## TRAIN or TEST
-    trainer = get_trainer(logger=tb_logger, **config['training'])
+    trainer = get_trainer(logger=tb_logger, **config['testing' if is_test_mode else 'training'])
     if not is_test_mode:
         trainer.fit(exp, dm)
     else:
