@@ -38,13 +38,13 @@ experiment:
   reference_channel: 0
 
 training:
-  max_epochs: 250 # 250
+  max_epochs: 250
   gradient_clip_val: 0
   gradient_clip_algorithm: value
   strategy: ddp
   accelerator: gpu
   devices: 4
-  resume_ckpt: "../logs/tb_logs/JNF/version_1/checkpoints/epoch=49-step=750.ckpt"
+  resume_ckpt: "../logs/tb_logs/JNF/version_6/checkpoints/epoch=249-step=93750.ckpt"
 
 
 logging:
