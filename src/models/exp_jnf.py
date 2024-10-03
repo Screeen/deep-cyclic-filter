@@ -74,11 +74,11 @@ class JNFExp(EnhancementExp):
         # logging
         on_step = False
         log_settings = {'on_step': on_step, 'on_epoch': True, 'logger': True, 'sync_dist': True, 'prog_bar': True}
-        self.log(f'{stage}/loss', loss, **log_settings)
-        self.log(f'{stage}/clean_td_loss', clean_td_loss.mean(), **log_settings)
-        self.log(f'{stage}/noise_td_loss', noise_td_loss.mean(), **log_settings)
-        self.log(f'{stage}/clean_mag_loss', clean_mag_loss.mean(), **log_settings)
-        self.log(f'{stage}/noise_mag_loss', noise_mag_loss.mean(), **log_settings)
+        self.log(f'{stage}_loss', loss, **log_settings)
+        self.log(f'{stage}_clean_td_loss', clean_td_loss.mean(), **log_settings)
+        self.log(f'{stage}_noise_td_loss', noise_td_loss.mean(), **log_settings)
+        self.log(f'{stage}_clean_mag_loss', clean_mag_loss.mean(), **log_settings)
+        self.log(f'{stage}_noise_mag_loss', noise_mag_loss.mean(), **log_settings)
 
         if batch_idx < 1:
             self.log_batch_detailed_audio(noisy_td[:, self.reference_channel, ...], est_clean_td, batch_idx, stage)

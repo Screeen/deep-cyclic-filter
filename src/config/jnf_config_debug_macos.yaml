@@ -44,7 +44,7 @@ training:
   strategy: auto #ddp
   accelerator: gpu #mps #gpu
   devices: 1
-  resume_ckpt: "../logs/tb_logs/JNF/version_0/checkpoints/epoch=9-step=300.ckpt"
+#  resume_ckpt: "../logs/tb_logs/JNF/version_0/checkpoints/epoch=9-step=300.ckpt"
 
 testing:
   strategy: auto #ddp

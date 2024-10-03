@@ -157,7 +157,7 @@ class SSFExp(EnhancementExp):
         self.running_loss(loss)
         on_step = True if stage == 'train' else False
         self.log(
-            f"{stage}/loss",
+            f"{stage}_loss",
             self.running_loss.compute(),
             on_step=on_step,
             on_epoch=True,
@@ -168,7 +168,7 @@ class SSFExp(EnhancementExp):
         )
         if self.loss_type == "l1":
             self.log(
-                f"{stage}/clean_td_loss",
+                f"{stage}_clean_td_loss",
                 clean_td_loss.mean(),
                 on_step=on_step,
                 on_epoch=True,
@@ -178,7 +178,7 @@ class SSFExp(EnhancementExp):
             )
 
             self.log(
-                f"{stage}/clean_mag_loss",
+                f"{stage}_clean_mag_loss",
                 clean_mag_loss.mean(),
                 on_step=on_step,
                 on_epoch=True,

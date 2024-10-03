@@ -18,6 +18,19 @@ import src.utils.utils as u
 u.set_printoptions_numpy()
 
 
+def setup_checkpointing(ckpt_dir, version_integer):
+
+    checkpoint_dir = os.path.join(ckpt_dir, EXP_NAME, f'version_{version_integer}')
+    return pl.callbacks.ModelCheckpoint(
+        monitor='val_loss',
+        mode='min',
+        save_top_k=2,
+        save_last=True,
+        filename='checkpoint_{epoch:02d}_{val_loss:.4f}',
+        dirpath=checkpoint_dir,
+    )
+
+
 def setup_logging(tb_log_dir: str, version_id_: Optional[int] = None):
     """
     Set-up a Tensorboard logger.
@@ -47,7 +60,7 @@ def load_model(ckpt_file_: str, _config: dict):
     return model_
 
 
-def get_trainer(devices, logger, max_epochs=None, gradient_clip_val=None, gradient_clip_algorithm=None, strategy='auto',
+def get_trainer(devices, logger, checkpoint_callback, max_epochs=None, gradient_clip_val=None, gradient_clip_algorithm=None, strategy='auto',
                 accelerator='auto', resume_ckpt=None):
     return pl.Trainer(enable_model_summary=True,
                       logger=logger,
@@ -59,7 +72,7 @@ def get_trainer(devices, logger, max_epochs=None, gradient_clip_val=None, gradie
                       strategy=strategy,
                       accelerator=accelerator,
                       callbacks=[
-                          # setup_checkpointing(),
+                          checkpoint_callback,
                           ModelSummary(max_depth=2)
                       ],
                       )
@@ -108,6 +121,7 @@ if __name__ == "__main__":
                 version_id = int(s.split('_')[-1])
                 break
     tb_logger, version = setup_logging(config['logging']['tb_log_dir'], version_id)
+    checkpoint_cb = setup_checkpointing(config['logging']['ckpt_dir'], version)
 
     ## DATA
     data_config = config['data']
@@ -118,6 +132,8 @@ if __name__ == "__main__":
     ## CONFIGURE EXPERIMENT
     if ckpt_file is not None:
         exp = load_model(ckpt_file, config)
+        if is_test_mode:
+            exp.eval()
     else:
         model = FTJNF(**config['network'])
         exp = JNFExp(model=model,
@@ -126,7 +142,8 @@ if __name__ == "__main__":
                      **config['experiment'])
 
     ## TRAIN or TEST
-    trainer = get_trainer(logger=tb_logger, **config['testing' if is_test_mode else 'training'])
+    trainer = get_trainer(logger=tb_logger, checkpoint_callback=checkpoint_cb,
+                          **config['testing' if is_test_mode else 'training'])
     if not is_test_mode:
         trainer.fit(exp, dm)
     else:
