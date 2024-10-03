@@ -3,6 +3,8 @@ import torch
 from torch import nn
 from typing import List, Union, Literal
 from torch.optim import Adam
+from torchmetrics.audio import ShortTimeObjectiveIntelligibility
+
 from src.utils.log_images import make_image_grid
 
 
@@ -81,6 +83,15 @@ class EnhancementExp(pl.LightningModule):
         enhanced_si_sdr = si_sdr(clean_td, est_clean_td)
 
         return enhanced_si_sdr
+
+    def compute_global_stoi(self, est_clean_time, clean_time):
+
+        # TODO: where to get fs?
+
+        stoi_obj = ShortTimeObjectiveIntelligibility(fs=16000, extended=True)
+        stoi_res = stoi_obj(est_clean_time, clean_time)
+
+        return stoi_res
 
     def configure_optimizers(self):
 

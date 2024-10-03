@@ -105,4 +105,7 @@ class JNFExp(EnhancementExp):
             global_si_sdr = self.compute_global_si_sdr(est_clean_td, clean_td)
             self.log('test/si_sdr', global_si_sdr.mean(), on_epoch=True, logger=True, sync_dist=True)
 
+            global_stoi = self.compute_global_stoi(est_clean_td, clean_td)
+            self.log('test/stoi', global_stoi.mean(), on_epoch=True, logger=True, sync_dist=True)
+
         return loss

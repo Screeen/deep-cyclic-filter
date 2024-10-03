@@ -59,7 +59,7 @@ kiwisolver==1.4.5
 llvmlite==0.43.0
 Markdown==3.7
 MarkupSafe==2.1.5
-matplotlib==3.8.2
+matplotlib~=3.9.2
 matplotlib-inline==0.1.6
 mistune==3.0.2
 mpmath==1.3.0
@@ -96,7 +96,7 @@ pyparsing==3.1.1
 #pypesq @ https://github.com/vBaiCai/python-pesq/archive/master.zip#sha256=fba27c3d95e8f72fed7c55f675ce6057a64b26a1a67a2e469df2804cca69b8cc
 python-dateutil==2.8.2
 python-json-logger==2.0.7
-PyYAML==6.0.1
+PyYAML~=6.0.2
 pyzmq==25.1.2
 qtconsole==5.5.1
 QtPy==2.4.1
@@ -107,7 +107,7 @@ requests-oauthlib==2.0.0
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rpds-py==0.17.1
-scipy==1.12.0
+scipy~=1.13.1
 Send2Trash==1.8.2
 six==1.16.0
 sniffio==1.3.0
@@ -136,3 +136,9 @@ websocket-client==1.7.0
 Werkzeug==3.0.4
 widgetsnbextension==4.0.10
 yapecs==0.0.8
+
+h5py~=3.12.1
+pyroomacoustics~=0.7.7
+sounddevice~=0.5.0
+torchvision~=0.19.1
+torchmetrics~=1.4.2
